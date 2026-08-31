@@ -1,0 +1,23 @@
+WorkflowCoder=/$PWD filter="*.rb *.rake Rakefile *.rdoc *.R *.sh *.js *.haml *.sass *.txt *.conf *.slim *.haml" {
+ start_chat
+ workflow.rb
+ chats=chats filter="*"{
+  basic_tasks
+ }
+ lib=lib {
+  WorkflowCoder=WorkflowCoder{
+   tasks=tasks{
+    workflow_tools.rb
+   }
+  }
+ }
+ share=share filter="*"{
+ }
+ data=data filter="*"{
+ }
+ test=test {
+  test_helper.rb
+ }
+ README.md
+ LICENSE
+}
