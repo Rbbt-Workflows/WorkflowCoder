@@ -232,6 +232,10 @@ module WorkflowCoder
     new
   end
 
+  helper :require_workflow do |workflow|
+    Workflow.require_workflow workflow.to_s
+  end
+
   desc "List all tasks available in a workflow"
   input :workflow, :string, "Name of the workflow to inspect"
   task :list_tasks => :json do |workflow|
@@ -402,6 +406,73 @@ module WorkflowCoder
     # consistent with the other input errors.
     if mode && !mode.to_s.strip.empty? && !SUBMISSION_MODES.include?(mode.to_s)
       result[:mode] = mode.to_s
+      result[:status] = "error"
+      result[:error_phase] = "input_validation"
+      result[:exception_class] = "ParameterException"
+      result[:exception_message] = "Invalid mode '#{mode}'. Valid modes: #{SUBMISSION_MODES.join(', ')} (preview_job is the fourth submission point but is a separate task, not a mode)."
+      next result
+    end
+
+    # Phase 1: Load workflow
+    wf = nil
+    begin
+      wf = require_workflow workflow
+    rescue Exception => e
+      result[:status] = "error"
+      result[:error_phase] = "load_workflow"
+      result[:exception_class] = e.class.name
+      result[:exception_message] = e.message
+      result[:backtrace_summary] = e.backtrace ? e.backtrace.first(10) : []
+      next result
+    end
+
+    # Phase 2: Validate task exists
+    tname = task.to_sym
+    unless wf.tasks.include?(tname)
+      result[:status] = "error"
+      result[:error_phase] = "task_validation"
+      result[:exception_class] = "ParameterException"
+      result[:exception_message] = "Task '#{task}' not found in workflow '#{workflow}'. Available tasks: #{wf.tasks.keys.sort_by(&:to_s).join(', ')}"
+      next result
+    end
+
+    t = wf.tasks[tname]
+
+    # Phase 3: Input validation (best-effort, non-blocking)
+    provided_keys = inputs ? inputs.keys.map(&:to_s) : []
+    task_input_names = (t.recursive_inputs || t.inputs || []).map{|i| i[0].to_s }
+
+    # Warn about unknown inputs (typos, wrong names)
+    if provided_keys.any?
+      known_set = task_input_names.to_set
+      provided_keys.each do |k|
+        unless known_set.include?(k)
+          result[:warnings] << "Input '#{k}' is not recognized by task '#{task}'. Known inputs: #{task_input_names.join(', ')}"
+        end
+      end
+    end
+
+    # Check for required inputs
+    (t.recursive_inputs || t.inputs || []).each do |i|
+      iname, itype, idesc, idefault, iopts = i
+      if iopts && iopts[:required] && !provided_keys.include?(iname.to_s)
+        result[:warnings] << "Required input '#{iname}' was not provided."
+      end
+    end
+
+    # Convert string keys to symbols for Scout compatibility
+    sym_inputs = {}
+    if inputs
+      inputs.each do |k, v|
+        sym_inputs[k.to_sym] = v
+      end
+    end
+
+    # Phase 4: Create job
+    step = nil
+    begin
+      step = wf.job(tname, nil, sym_inputs)
+    rescue ParameterException => e
       result[:status] = "error"
       result[:error_phase] = "input_validation"
       result[:exception_class] = "ParameterException"
