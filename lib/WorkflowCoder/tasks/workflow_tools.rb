@@ -381,6 +381,9 @@ module WorkflowCoder
   input :mode, :select, "Submission mode: wait_result (block and return the result), wait_path (block and return only the job path), fork (background submission, return a receipt immediately)", "wait_result", select_options: SUBMISSION_MODES
   input :job, :string, "Reference to an existing job: full job path, short_path 'Workflow/task/name', or 'task/name' plus the workflow option", nil, nofile: true
   task :run_task => :json do |workflow, task, inputs, clean, recursive_clean, stream, mode, job|
+
+    inputs = JSON.parse inputs if String === inputs
+
     result = {
       workflow: workflow.to_s,
       task: task.to_s,
