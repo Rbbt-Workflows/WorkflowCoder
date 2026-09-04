@@ -4,6 +4,8 @@ WorkflowCoder=/$PWD filter="*.rb *.rake Rakefile *.rdoc *.R *.sh *.js *.haml *.s
  chats=chats filter="*"{
   test
   job_path
+  documentation
+  documentation.analyze
  }
  lib=lib {
   WorkflowCoder=WorkflowCoder{

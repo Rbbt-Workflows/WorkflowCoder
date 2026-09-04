@@ -236,7 +236,6 @@ module WorkflowCoder
     Workflow.require_workflow workflow.to_s
   end
 
-  desc "List all tasks available in a workflow"
   input :workflow, :string, "Name of the workflow to inspect"
   task :list_tasks => :json do |workflow|
     raise ParameterException, "workflow is required" if workflow.nil? || workflow.to_s.strip.empty?
@@ -272,7 +271,6 @@ module WorkflowCoder
     end
   end
 
-  desc "Get detailed input specifications for a single workflow task"
   input :workflow, :string, "Name of the workflow"
   input :task, :string, "Name of the task to inspect"
   task :task_inputs => :json do |workflow, task|
@@ -325,53 +323,6 @@ module WorkflowCoder
     }
   end
 
-  desc <<~DESC
-    Execute a workflow task and return structured diagnostics
-
-    Runs a task through the standard phases (load workflow, task
-    validation, input validation, job creation, optional clean, execution)
-    and reports status, output value, generated files, warnings, timing,
-    job path and log messages in one JSON structure.
-
-    Run by reference: instead of re-supplying workflow, task and inputs,
-    pass job with a reference to an existing job. The recorded inputs are
-    recovered from the referenced job's .info file and replayed through
-    the normal pipeline, so the run lands on the same job path when the
-    inputs round-trip faithfully. Accepted reference forms, tried in this
-    order: an existing job path (the job_path value returned by run_task,
-    job_info or preview_job; a trailing .info is tolerated), the
-    short_path identifier 'Workflow/task/name' that job_info reports
-    (Scout has no 'sort_path'; short_path is the same idea and is what is
-    accepted here), or 'task/name' together with the workflow option
-    (resolved with Workflow#load_job). The workflow and task options are
-    optional when job is given, and the workflow option is only used to
-    disambiguate 'task/name' references. Inputs passed alongside job are
-    merged over the recovered ones.
-
-    The response echoes the recovery in referenced_job: reference form,
-    resolved path, short_path, recovered inputs, and whether extra inputs
-    were merged. If the rebuilt job path differs from the referenced path
-    a warning is added instead of failing: file and step inputs recorded
-    in .info serialize as paths and can diverge through input formatting,
-    so use the save_inputs / load_inputs bundle of the referenced job when
-    exact fidelity is required. Unresolvable or never-run references
-    return structured error JSON with error_phase 'job_reference'.
-
-    Submission modes: the optional mode input selects how the job is
-    submitted. 'wait_result' (default) is exactly the historical behavior:
-    blocking run, result value in the output field. 'wait_path' is a
-    blocking run that never materializes the result in memory (it uses
-    run(:no_load)) and returns only a path receipt. 'fork' is background
-    submission through Step#fork, mirroring scout-camp's asynchronous
-    initiate_step: the task returns immediately with submitted: true and a
-    receipt (job_path, short_path, files_dir, pid), while the job runs to
-    completion in a detached child process; poll it with job_status and
-    fetch the payload with job_result. preview_job remains the fourth
-    submission point, unchanged: it returns the path without submitting
-    anything. Invalid mode values return error_phase 'input_validation'.
-    mode composes with the job reference input: a referenced job can be
-    re-run in any mode.
-  DESC
   input :workflow, :string, "Name of the workflow to load and execute (optional when job is given)"
   input :task, :string, "Name of the task to run (optional when job is given)"
   input :inputs, :text, "Hash of input name to value pairs in JSON", {}
@@ -690,7 +641,6 @@ module WorkflowCoder
     result
   end
 
-  desc "Clean cached results for a workflow task"
   input :workflow, :string, "Name of the workflow"
   input :task, :string, "Name of the task"
   input :inputs, :text, "Hash of input name to value pairs in JSON", {}
@@ -731,7 +681,6 @@ module WorkflowCoder
     }
   end
 
-  desc "Retrieve structured info about a job without running it"
   input :workflow, :string, "Name of the workflow"
   input :task, :string, "Name of the task"
   input :inputs, :text, "Hash of input name to value pairs in JSON", {}, nofile: true
@@ -801,31 +750,6 @@ module WorkflowCoder
     result
   end
 
-  desc <<~DESC
-    Preview the job path a task run would get, without running it
-
-    Loads the target workflow, validates the task and its inputs with the
-    exact same plumbing as run_task (same warnings and the same error_phase
-    taxonomy: load_workflow, task_validation, input_validation,
-    job_creation), and builds the job through Workflow#job, which only
-    constructs the Step. The job is NOT executed: no run/exec/persist is
-    issued, no .info file is written, and no cache entry is touched, so
-    previewing has no effect on the job's state.
-
-    The returned JSON contains: job_path (full filesystem path the job
-    result would occupy), short_path (Workflow/task/name identifier usable
-    as a compact job reference), name and clean_name (the job label: a job
-    using only default inputs is labeled plain 'Default', while any
-    non-default input appends an input hash), files_dir, non_default_inputs
-    (the inputs that determined the label), dependencies (short_paths of
-    the jobs it would depend on), info_exists and result_exists (whether
-    this job was already run before), and status read from the existing
-    .info when present ('not_run' otherwise).
-
-    Caveat: the job label hash is computed from input values, and
-    file-valued inputs are digested by content, so the previewed path can
-    move when an input file changes even if the path string stays the same.
-  DESC
   input :workflow, :string, "Name of the workflow to load"
   input :task, :string, "Name of the task to preview"
   input :inputs, :text, "Hash of input name to value pairs in JSON", {}, nofile: true
@@ -1277,21 +1201,6 @@ module WorkflowCoder
     }
   end
 
-  desc <<~'DESC'
-    Report the status of a job by reference, without running anything
-
-    Pure read of the job's .info sidecar: terminal states (done, error with
-    exception details, aborted) and live states (running, started, waiting)
-    plus pid liveness and timestamps. Never triggers execution: the
-    reference is rebuilt as a bare path-Step (Workflow#load_job /
-    Step.load), which carries no task block and therefore cannot re-run
-    the job.
-
-    Accepted references: the full job_path returned by run_task, job_info,
-    preview_job or a fork receipt; the short_path 'Workflow/task/name'; or
-    'task/name' together with the workflow input. Unresolvable references
-    return structured error JSON with error_phase 'job_reference'.
-  DESC
   input :job, :string, "Reference to the job: full job path, short_path 'Workflow/task/name', or 'task/name' plus the workflow input", nil, nofile: true
   input :workflow, :string, "Name of the workflow (only used to disambiguate 'task/name' references)"
   task :job_status => :json do |job, workflow|
@@ -1317,24 +1226,6 @@ module WorkflowCoder
     result
   end
 
-  desc <<~'DESC'
-    Stop a running job by reference
-
-    Terminates the job through the engine's own abort path and reconciles
-    the final status. Sequence: Step#abort (TERM + waitpid through
-    Misc.abort_child, the same mechanism the engine uses for dependencies),
-    then a brief liveness check of info[:pid], escalating to SIGKILL plus
-    Misc.wait_child only if the process survived the TERM, and finally a
-    merge_info(:status => :aborted, :end => Time.now) reconciliation.
-
-    CONVENTION: our stop ALWAYS ends in :aborted. The engine itself only
-    writes :aborted from the streaming abort callback (scout-gear
-    step.rb:272); a TERM-killed forked child instead records :error with
-    an Aborted exception, which is a recoverable error. We deliberately
-    normalize to :aborted so a stopped job is never mistaken for a failed
-    one and so aborted? is truthfully true afterwards. Jobs already
-    done/error/aborted are reported as-is instead of being killed.
-  DESC
   input :job, :string, "Reference to the job: full job path, short_path 'Workflow/task/name', or 'task/name' plus the workflow input", nil, nofile: true
   input :workflow, :string, "Name of the workflow (only used to disambiguate 'task/name' references)"
   task :job_stop => :json do |job, workflow|
@@ -1393,7 +1284,7 @@ module WorkflowCoder
   end
 
   # Engine-native stop: abort -> liveness check -> KILL escalation ->
-  # :aborted reconciliation. See the job_stop description for the
+  # :aborted reconciliation. See the job_stop section of README.md for the
   # convention rationale.
   #
   # ScoutCoder: the engine writes :aborted ONLY from the streaming abort
@@ -1475,17 +1366,6 @@ module WorkflowCoder
     result
   end
 
-  desc <<~'DESC'
-    Load the result payload of a finished job by reference
-
-    Reads the job's stored payload from its job file (no task block is
-    involved, so nothing can re-execute). Terminal states only: a done job
-    returns its content (truncated to 5000 bytes with a warning when
-    larger), an error job returns its recorded exception, an aborted job
-    reports that, and a job still running or waiting reports in-progress
-    instead of blocking. Use job_status to watch a running job and
-    job_files to inspect produced files.
-  DESC
   input :job, :string, "Reference to the job: full job path, short_path 'Workflow/task/name', or 'task/name' plus the workflow input", nil, nofile: true
   input :workflow, :string, "Name of the workflow (only used to disambiguate 'task/name' references)"
   task :job_result => :json do |job, workflow|
@@ -1531,15 +1411,6 @@ module WorkflowCoder
     result
   end
 
-  desc <<~'DESC'
-    List (or read) the files produced by a job
-
-    Lists every file in the job's files_dir with path, size and mtime. With
-    the optional file input, reads ONE file instead: the payload is
-    returned bounded by max_bytes (default 5000) and binary files are
-    reported as binary rather than dumped. Requesting a file that is not
-    in this job's files_dir returns error_phase 'input_validation'.
-  DESC
   input :job, :string, "Reference to the job: full job path, short_path 'Workflow/task/name', or 'task/name' plus the workflow input", nil, nofile: true
   input :workflow, :string, "Name of the workflow (only used to disambiguate 'task/name' references)"
   input :file, :string, "Optional: name of ONE file inside the job's files_dir to read (bounded)", nil, nofile: true
