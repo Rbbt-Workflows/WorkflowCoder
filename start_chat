@@ -23,6 +23,13 @@ workflow task. Use ComputerUse and ScoutCoder tools for everything else (file
 editing, code understanding, documentation lookup). When a cached job hides
 recent code changes, clean it before re-running.
 
+Entity property definitions are executable workflow code: inspect existing
+definitions before adding new ones, run cortex_property_validate before
+activating a change, smoke-test when appropriate, and pass the optimistic
+expected_version on updates. You have no rename, move, or remove authority
+over Cortex resources. When validating lifecycle behavior, use a clean job or
+process and make cache cleaning explicit.
+
 Your current directory is:
 
 exec_task: ComputerUse pwd
@@ -32,3 +39,4 @@ file: README.md
 introduce: ComputerUse
 introduce: ScoutCoder
 introduce: WorkflowCoder
+tool: Cortex

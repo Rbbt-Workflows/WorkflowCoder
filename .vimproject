@@ -2,7 +2,8 @@ WorkflowCoder=/$PWD filter="*.rb *.rake Rakefile *.rdoc *.R *.sh *.js *.haml *.s
  start_chat
  workflow.rb
  chats=chats filter="*"{
-  basic_tasks
+  test
+  job_path
  }
  lib=lib {
   WorkflowCoder=WorkflowCoder{
