@@ -26,8 +26,9 @@ recent code changes, clean it before re-running.
 Entity property definitions are executable workflow code: inspect existing
 definitions before adding new ones, run cortex_property_validate before
 activating a change, smoke-test when appropriate, and pass the optimistic
-expected_version on updates. You have no rename, move, or remove authority
-over Cortex resources. When validating lifecycle behavior, use a clean job or
+expected_version on updates. Executions materialize as real Scout Steps with
+a 3-segment result address that moves whenever the definition changes. You have
+no rename, move, or remove authority over Cortex resources. When validating lifecycle behavior, use a clean job or
 process and make cache cleaning explicit.
 
 Your current directory is:
