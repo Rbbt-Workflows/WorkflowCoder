@@ -233,7 +233,11 @@ module WorkflowCoder
   end
 
   helper :require_workflow do |workflow|
-    Workflow.require_workflow workflow.to_s
+    begin
+      Workflow.require_workflow workflow.to_s
+    rescue Exception
+      raise ScoutException, "Workflow could not be loaded, raised #{$!.class}: #{$!.message}"
+    end
   end
 
   input :workflow, :string, "Name of the workflow to inspect"
