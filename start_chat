@@ -34,9 +34,6 @@ process and make cache cleaning explicit.
 Your current directory is:
 
 exec_task: ComputerUse pwd
-
-file: README.md
-
 introduce: ComputerUse
 introduce: ScoutCoder
 introduce: WorkflowCoder

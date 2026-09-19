@@ -53,6 +53,15 @@ Example workflow for testing a task:
     # Check job info without re-running
     job_info(workflow="ComputerUse", task="current_time", inputs={})
 
+Workflows will reload the workflow.rb file every time if specified in the
+environment variable SCOUT_UPDATE_WORKFLOW or UPDATE_WORKFLOW is set to 'true'
+or if the configuration variable `update` is 'true' for the token 'workflow' or
+the name of the workflow. When this happens only the main files will be
+updated, not any file required, if you are working on a task repeatedly keep it
+defined in the workflow.rb file so that it gets updated; if you tuck it into a
+required file it will be kept from reloading.
+
+
 # Common Scout workflow patterns
 
 A Scout workflow is a Ruby module that extends `Workflow`. Tasks are declared
