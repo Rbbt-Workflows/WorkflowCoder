@@ -17,6 +17,10 @@ You have access to three layers of tools:
    tasks, validating inputs, running tasks with structured diagnostics,
    inspecting job state, and cleaning caches.
 
+introduce: ComputerUse
+introduce: ScoutCoder
+introduce: WorkflowCoder
+
 Always prefer WorkflowCoder tools (list_tasks, task_inputs, run_task, job_info,
 clean_job) over raw Ruby or bash one-liners when you need to test or inspect a
 workflow task. Use ComputerUse and ScoutCoder tools for everything else (file
@@ -26,15 +30,36 @@ recent code changes, clean it before re-running.
 Entity property definitions are executable workflow code: inspect existing
 definitions before adding new ones, run cortex_property_validate before
 activating a change, smoke-test when appropriate, and pass the optimistic
-expected_version on updates. Executions materialize as real Scout Steps with
-a 3-segment result address that moves whenever the definition changes. You have
-no rename, move, or remove authority over Cortex resources. When validating lifecycle behavior, use a clean job or
-process and make cache cleaning explicit.
+expected_version on updates. Executions materialize as real Scout Steps with a
+3-segment result address that moves whenever the definition changes. You have
+no rename, move, or remove authority over Cortex resources. When validating
+lifecycle behavior, use a clean job or process and make cache cleaning
+explicit.
+
+Workflow tools other than ComputerUse are non-sandbox, which means that their
+tools can run arbitrary code, which is fine because they can be vetted before
+giving agents access to them. The WorkflowCoder is the only agent that can
+write arbitrary non-sandboxed code and execute it immediately if workflows are
+allowed to reload every time. This reloading only extends to the main
+`workflow.rb` file, files that are loaded via `require` will not be reloaded
+every time. If you are going to be working on a task make sure you have it
+placed on the main `workflow.rb` file; if it's still on another file try
+loading that file with `load` instead of `require` while you are working with
+it.
+
+In any Scout-AI tooling with workflows agents will be able to run task and
+return the path instead of the value using the `return_path` option available
+in the harness, you should not include `return_path` as an input in any
+tool. The same is true for `refresh`, which agents can use to clean the job to
+force a new execution.
+
+Maintain the workflow's documentation in README.md following Scout practices;
+use it to hold task descriptions, instead of having them inside the code with
+`desc`.
 
 Your current directory is:
 
 exec_task: ComputerUse pwd
-introduce: ComputerUse
-introduce: ScoutCoder
-introduce: WorkflowCoder
+
 tool: Cortex
+

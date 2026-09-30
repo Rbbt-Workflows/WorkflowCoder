@@ -9,7 +9,6 @@ module WorkflowCoder
 
 end
 
-
 WorkflowCoder.include_workflow ScoutCoder
 
-require 'WorkflowCoder/tasks/workflow_tools.rb'
+require 'WorkflowCoder/tasks/workflow_tools'

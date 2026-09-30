@@ -6,6 +6,8 @@ WorkflowCoder=/$PWD filter="*.rb *.rake Rakefile *.rdoc *.R *.sh *.js *.haml *.s
   job_path
   documentation
   documentation.analyze
+
+  async
  }
  lib=lib {
   WorkflowCoder=WorkflowCoder{

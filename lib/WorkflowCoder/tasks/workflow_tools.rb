@@ -653,7 +653,11 @@ module WorkflowCoder
     raise ParameterException, "workflow is required" if workflow.nil? || workflow.to_s.strip.empty?
     raise ParameterException, "task is required" if task.nil? || task.to_s.strip.empty?
 
-    inputs = JSON.parse inputs if String === inputs
+    inputs = begin
+               JSON.parse inputs
+             rescue JSON::ParserError
+               raise ParameterException, "Error parsing json in inputs #{Log.fingerprint inputs}"
+             end if String === inputs
 
     wf = require_workflow workflow
     tname = task.to_sym
