@@ -130,9 +130,9 @@ three broad parts:
 
 1. A one-liner description of the workflow as a whole.
 2. One or more paragraphs of description on the workflow and its
-   functionalities, including (if relevant) examples or installation
-   instructions. Header indicators like `#` or `##` are allowed in this
-   section.
+   functionalities, and may include advice, installation 
+   instructions, examples, etc. Header indicators like `#` or `##` 
+   are allowed in this section.
 3. A section describing the different tasks.
 
 The third section, where tasks are described, follows a particular format. It
